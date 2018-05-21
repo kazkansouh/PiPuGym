@@ -30,5 +30,5 @@ difference() {
     translate([hob_spacing/2,-((hobs_deep+1)*hob_spacing)/2,case_width/2 + case_width/3 - case_thick - 1])
         led_matrix(hobs_wide,hobs_deep);
     translate([case_thick/3 * 2, -5, -case_width/2 + case_width/3 + case_slice + 1])
-        cube([case_length - case_thick*2 + case_thick/3 * 2,10,1]);
+        cube([case_length - case_thick*2 + case_thick/3 * 2,arm_depth,1]);
 };
