@@ -2,13 +2,15 @@
 OPENSCAD = openscad
 
 TARGETS = case.stl back.stl
+IMAGES = $(patsubst %.stl,%.png,${TARGETS})
 
 default: ${TARGETS}
+images: ${IMAGES}
 
-%.stl: %.scad
+%.stl %.png: %.scad
 	${OPENSCAD} -o $@ $<
 
 clean:
-	-rm -f ${TARGETS}
+	-rm -f ${TARGETS} ${IMAGES}
 
-.PHONY: clean default
+.PHONY: clean default images
