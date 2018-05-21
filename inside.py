@@ -3,6 +3,8 @@
 import requests
 import time
 import argparse
+import spidev
+import traceback
 
 # these are the urls used for logging in/accessing the members area.
 url1 = "https://www.puregym.com/login/"
@@ -55,7 +57,30 @@ def getparams() :
     parser.add_argument('pin', help='pin used to login to website')
     return parser.parse_args()
 
-def run() :
+def writespi(people, spi) :
+    "convert people to an numeric value between 0 to 8 and write to spi"
+    val = 0xFF
+    if people < 20 :
+        val = 0x00
+    elif people <= 35 :
+        val = 0x01
+    elif people <= 50 :
+        val = 0x03
+    elif people <= 70 :
+        val = 0x07
+    elif people <= 90 :
+        val = 0x0F
+    elif people <= 110 :
+        val = 0x1F
+    elif people <= 125 :
+        val = 0x3F
+    elif people <= 135 :
+        val = 0x7F
+    else :
+        val = 0xFF
+    spi.xfer([val])
+
+def run(spi) :
     "Main loop"
     params = getparams()
     jar = requests.cookies.RequestsCookieJar()
@@ -77,6 +102,9 @@ def run() :
             if loc > 0 :
                 people = r.text[loc + len(match):loc + len(match) + 30].split(' ')[0]
                 print(time.asctime() + ', ' + people)
+                if people == "Fewer" :
+                    people = "0"
+                writespi(int(people), spi)
                 time.sleep(120)
             else :
                 # should not happen in normal situations
@@ -85,4 +113,16 @@ def run() :
                 break
 
 if __name__ == "__main__" :
-    run()
+    spi = spidev.SpiDev()
+    spi.open(0,0)
+    try :
+        run(spi)
+    except :
+        print("An error has occurred")
+        traceback.print_exc()
+    finally :
+        while True :
+            spi.xfer([0xAA])
+            time.sleep(15)
+            spi.xfer([0x55])
+            time.sleep(15)
