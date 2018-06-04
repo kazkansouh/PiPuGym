@@ -85,6 +85,7 @@ def run(spi) :
     params = getparams()
     jar = requests.cookies.RequestsCookieJar()
     last_action_login = False
+    error_counter = 0
 
     while True :
         r = requests.get(url3, cookies=jar, allow_redirects=False, verify=enable_verify)
@@ -100,6 +101,7 @@ def run(spi) :
             last_action_login = False
             loc = r.text.find(match)
             if loc > 0 :
+                error_counter = 0
                 people = r.text[loc + len(match):loc + len(match) + 30].split(' ')[0]
                 print(time.asctime() + ', ' + people)
                 if people == "Fewer" :
@@ -108,9 +110,15 @@ def run(spi) :
                 time.sleep(120)
             else :
                 # should not happen in normal situations
+                error_counter = error_counter + 1
                 print("could not find match")
+                print(r.headers)
                 print(r.text)
-                break
+                if error_counter > 5 :
+                    break
+                else :
+                    print("retrying")
+                    time.sleep(10)
 
 if __name__ == "__main__" :
     spi = spidev.SpiDev()
@@ -121,8 +129,10 @@ if __name__ == "__main__" :
         print("An error has occurred")
         traceback.print_exc()
     finally :
+        x = 1
         while True :
-            spi.xfer([0xAA])
-            time.sleep(15)
-            spi.xfer([0x55])
-            time.sleep(15)
+            spi.xfer([x])
+            x = x << 1
+            if x > 0x80 :
+                x = 1
+            time.sleep(0.25)
