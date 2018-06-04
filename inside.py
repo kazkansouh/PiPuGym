@@ -84,21 +84,23 @@ def run(spi) :
     "Main loop"
     params = getparams()
     jar = requests.cookies.RequestsCookieJar()
-    last_action_login = False
+    last_action_login = 0
     error_counter = 0
 
     while True :
         r = requests.get(url3, cookies=jar, allow_redirects=False, verify=enable_verify)
         if r.status_code != 200 : # will get 302 if not logged in
-            if last_action_login :
+            if last_action_login > 3 :
                 print("Login loop detected, exiting.")
                 break
-            last_action_login = True
+            elif last_action_login > 0 :
+                time.sleep(15)
+            last_action_login += 1
             jar = login(params.email, params.pin)
             if jar is None :
                 break
         else :
-            last_action_login = False
+            last_action_login = 0
             loc = r.text.find(match)
             if loc > 0 :
                 error_counter = 0
