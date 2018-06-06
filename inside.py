@@ -40,8 +40,11 @@ def login(email, pin) :
     }
     headers = {'__RequestVerificationToken': token}
     r = requests.post(url2, json = data, headers = headers, cookies=jar, allow_redirects=False, verify=enable_verify)
-    if r.status_code != 200 : # expect 302 if not successful
-        print("failed to authenticate")
+    if r.status_code == 524 :
+        print("timout while authenticating")
+        return None
+    elif r.status_code != 200 : # expect 302 if not successful
+        print("failed to authenticate http response code: " + str(r.status_code))
         print(r.text)
         return None
 
@@ -90,15 +93,13 @@ def run(spi) :
     while True :
         r = requests.get(url3, cookies=jar, allow_redirects=False, verify=enable_verify)
         if r.status_code != 200 : # will get 302 if not logged in
+            print("Request failed with code: " + str(r.status_code))
             if last_action_login > 3 :
                 print("Login loop detected, exiting.")
                 break
-            elif last_action_login > 0 :
-                time.sleep(15)
+            time.sleep(15 * last_action_login)
             last_action_login += 1
             jar = login(params.email, params.pin)
-            if jar is None :
-                break
         else :
             last_action_login = 0
             loc = r.text.find(match)
